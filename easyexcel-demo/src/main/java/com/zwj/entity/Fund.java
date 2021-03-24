@@ -9,4 +9,5 @@ public class Fund {
     private double preday;
     private double currentday;
     private double wave;
+    private String fundname;
 }
