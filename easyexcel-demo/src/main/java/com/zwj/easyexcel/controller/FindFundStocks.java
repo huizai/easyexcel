@@ -9,6 +9,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -22,14 +23,14 @@ public class FindFundStocks {
     static   String fileName =  "D:\\\\s\\\\test.xlsx";
     public static void main(String[] args) throws Exception{
         //输入想要查询的内容 返回时持有改内容的鸡
-        System.out.println("輸入...");
-        Scanner scanner = new Scanner(System.in);
-        String scan = scanner.next();
+//        System.out.println("輸入...");
+//        Scanner scanner = new Scanner(System.in);
+//        String scan = scanner.next();
+//
+////        prepareExcelData();
+//        EasyExcel.read(new File(fileName), Data.class, new ConfigFilterListener(scan)).sheet().doRead();
 
-//        prepareExcelData();
-        EasyExcel.read(new File(fileName), Data.class, new ConfigFilterListener(scan)).sheet().doRead();
-
-
+        GetFuncDataFile();
     }
 
 
@@ -78,6 +79,11 @@ public class FindFundStocks {
     public static void downloadHttpUrl(String url, String dir, String fileName) {
         try {
             URL httpurl = new URL(url);
+            HttpURLConnection httpconn = (HttpURLConnection) httpurl.openConnection();
+
+            httpconn.setConnectTimeout(1000);
+
+            httpconn.setReadTimeout(1000);
             File dirfile = new File(dir);
             if (!dirfile.exists()) {
                 dirfile.mkdirs();

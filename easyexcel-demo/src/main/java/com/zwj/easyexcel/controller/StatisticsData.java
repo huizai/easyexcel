@@ -23,7 +23,7 @@ public class StatisticsData {
     
     @ExcelProperty("totalIncomePercent")
     @ColumnWidth(30)
-    private String totalIncomePercent;
+    private double totalIncomePercent;
     
     @ExcelProperty("take1")
     @ColumnWidth(30)

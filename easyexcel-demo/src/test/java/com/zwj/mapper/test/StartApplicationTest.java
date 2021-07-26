@@ -1,36 +1,27 @@
 package com.zwj.mapper.test;
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
+import com.alibaba.excel.util.StringUtils;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.zwj.easyexcel.controller.Data;
-import com.zwj.easyexcel.controller.FindFundStocks;
-import com.zwj.easyexcel.controller.StatisticListener;
+import com.zwj.easyexcel.controller.*;
 import com.zwj.easyexcel.data.ConfigFilterImport;
 import com.zwj.easyexcel.listener.ConfigFilterListener;
+import com.zwj.util.HttpUtil;
+import net.sf.cglib.core.Local;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +33,6 @@ import com.alibaba.excel.ExcelWriter;
 import com.alibaba.excel.write.metadata.WriteSheet;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.zwj.StartApplication;
-import com.zwj.easyexcel.controller.StatisticsData;
 import com.zwj.entity.Fund;
 import com.zwj.mapper.FundMapper;
 @RunWith(SpringRunner.class)
@@ -56,105 +46,322 @@ public class StartApplicationTest{
 	@Test
 	public void contextLoads() {
 
+		ArrayBlockingQueue queue = new ArrayBlockingQueue(12000);
+//		System.out.println(fundMapper.getFundMaxDate("260108"));
 
-		    	 try {
-					File dir = new File("D:\\s\\jj");
-					 File[] files = dir.listFiles();
-					 List<Data> excelData = new ArrayList<>();
+		Thread thread = new Thread(() -> {
+			System.out.println("消费线程启动");
+			List<Map<String, String>> allFuncMaxDate = fundMapper.getAllFuncMaxDate();
 
-					 for (File file : files) {
-					     String jJStockCode = FindFundStocks.getJJStockCode(file);
-					     String regex="Data_netWorthTrend =.*累计净值走势\\*\\/";
-					     Pattern r = Pattern.compile(regex);
-					     // 现在创建 matcher 对象
-					     Matcher m = r.matcher(jJStockCode);
+			//		    	try {
 
-					     if (m.find( )) {
-					         String str = m.group(0);
-		//			         System.out.println(str);
-					         String str1 = str.replaceAll("Data_netWorthTrend = ", "").replaceAll(";\\/\\*累计净值走势\\*\\/", "");
-		//			         System.out.println(str1);
+			//				String url = "https://eniu.com/chart/peindex/sz399300";
+			//				String result = HttpUtil.doGet(url);
+			//				System.out.println(result);
+			//					JSONObject parse = JSONObject.parseObject(result);
+			//					System.out.println(parse.get("date"));
+			//				;
+			//					JSONArray date = JSONObject.parseArray(parse.get("date").toString());
+			//					JSONArray pe = JSONObject.parseArray(parse.get("pe").toString());
+			//					for (int i = 0; i < date.size(); i++) {
+			//						System.out.println(date.get(i)+" - "+pe.get(i));
+			//						Fund fund = new Fund();
+			//						fund.setFundcode("sz399300");
+			//						fund.setFundname("沪深300");
+			//						fund.setTimedate(date.get(i).toString());
+			//						fund.setWave(Double.valueOf(pe.get(i).toString()));
+			//						fundMapper.insert(fund);
+			//					}
 
-					         JSONArray jsonArray = JSONObject.parseArray(str1);
-		//			        System.out.println(jsonArray.get(0));
-					         List<Fund> list = new ArrayList<Fund>();
-					         for(int i=0;i<jsonArray.size();i++) {
-					        	 JSONObject parseObject = JSONObject.parseObject(jsonArray.get(i).toString());
-		//				         System.out.println(parseObject.get("x")+"解析成功 ");
-						         Fund fund = new Fund();
+			//
+			//								String url ="https://stock.finance.sina.com.cn/fundInfo/api/openapi.php/CaihuiFundInfoService.getNav?callback=jQuery111208456380533606518_1615362540442&symbol=260108&datefrom=2010-03-01&dateto=2021-03-10&page=2&_=1615362540465";
+			//					String result = HttpUtil.doGet(url);
+			//					System.out.println(result);
+			//					 String regex="\\[.*\\]";
+			//					 Pattern r = Pattern.compile(regex);
+			//					 // 现在创建 matcher 对象
+			//					 Matcher m = r.matcher(result);
+			//
+			//					 if (m.find( )) {
+			//						 String str = m.group(0);
+			//						 System.out.println(str);
+			//		//				 JSONObject parseObject = JSONObject.parseObject( str);
+			//					 	//jQuery111208456380533606518_1615362540442({"result":{"status":{"code":0},"data":{"data":[{"fbrq":"2021-02-03 00:00:00","jjjz":"3.354","ljjz":"5.161"},{"fbrq":"2021-02-02 00:00:00","jjjz":"3.355","ljjz":"5.162"},{"fbrq":"2021-02-01 00:00:00","jjjz":"3.259","ljjz":"5.066"},{"fbrq":"2021-01-29 00:00:00","jjjz":"3.234","ljjz":"5.041"},{"fbrq":"2021-01-28 00:00:00","jjjz":"3.209","ljjz":"5.016"},{"fbrq":"2021-01-27 00:00:00","jjjz":"3.288","ljjz":"5.095"},{"fbrq":"2021-01-26 00:00:00","jjjz":"3.311","ljjz":"5.118"},{"fbrq":"2021-01-25 00:00:00","jjjz":"3.41","ljjz":"5.217"},{"fbrq":"2021-01-22 00:00:00","jjjz":"3.279","ljjz":"5.086"},{"fbrq":"2021-01-21 00:00:00","jjjz":"3.221","ljjz":"5.028"},{"fbrq":"2021-01-20 00:00:00","jjjz":"3.151","ljjz":"4.958"},{"fbrq":"2021-01-19 00:00:00","jjjz":"3.1","ljjz":"4.907"},{"fbrq":"2021-01-18 00:00:00","jjjz":"3.172","ljjz":"4.979"},{"fbrq":"2021-01-15 00:00:00","jjjz":"3.185","ljjz":"4.992"},{"fbrq":"2021-01-14 00:00:00","jjjz":"3.199","ljjz":"5.006"},{"fbrq":"2021-01-13 00:00:00","jjjz":"3.287","ljjz":"5.094"},{"fbrq":"2021-01-12 00:00:00","jjjz":"3.529","ljjz":"5.166"},{"fbrq":"2021-01-11 00:00:00","jjjz":"3.43","ljjz":"5.067"},{"fbrq":"2021-01-08 00:00:00","jjjz":"3.483","ljjz":"5.12"},{"fbrq":"2021-01-07 00:00:00","jjjz":"3.57","ljjz":"5.207"},{"fbrq":"2021-01-06 00:00:00","jjjz":"3.492","ljjz":"5.129"}],"total_num":"2692"}}})
+			//		//			 	System.out.println(parseObject.get("result"));
+			//		//			 	JSONObject dataObject = JSONObject.parseObject( parseObject.get("result").toString());
+			//		//			 	JSONObject subObj = JSONObject.parseObject(dataObject.get("data").toString());
+			//
+			//					 	JSONArray jsonArray = JSONObject.parseArray(str);
+			//					 	jsonArray.stream().forEach(System.out::println);
+			//					 }
+			//				} catch (Exception e) {
+			//					// TODO Auto-generated catch block
+			//					e.printStackTrace();
+			//				}
+			while (true) {
+				try {
 
-						         SimpleDateFormat format =  new SimpleDateFormat( "yyyy-MM-dd" );
-						         Long time=new Long(parseObject.get("x").toString());
-						         String d = format.format(time);
-						         Date date=format.parse(d);
-						         System.out.println("Format :"+d);
-						         fund.setFundcode(file.getName().replace(".js", ""));
-						         fund.setTimedate(d);
-						         //{"x":1604505600000,"y":0.931,"equityReturn":1.2,"unitMoney":""}
-						         fund.setCurrentday(Double.valueOf(parseObject.get("y").toString()));
-						         fund.setWave(Double.valueOf(parseObject.get("equityReturn").toString()));
-		//				         System.out.println(fund.toString());
-		//				         list.add(fund);
-						         fundMapper.insert(fund);
-					         }
+					String poll = (String)queue.poll();
+//					if (poll == null && !poll.equals("\"260108\"")) {
+//						continue;
+//					}
+					if (poll == null ) {
+						continue;
+					}
+					File file = new File("D:\\s\\jj\\" + poll.replaceAll("\"", "") + ".js");
+					//				File[] files = dir.listFiles();
+					//				List<Data> excelData = new ArrayList<>();
 
+					//				for (File file : files) {
+					String jJStockCode = FindFundStocks.getJJStockCode(file);
+					String regex1 = "fS_name =.*fS";
+					Pattern r1 = Pattern.compile(regex1);
+					// 现在创建 matcher 对象
+					Matcher m1 = r1.matcher(jJStockCode);
 
+					String fundName = "";
 
-					     }
+					if (m1.find()) {
+						String str = m1.group(0);
+						//			         System.out.println(str);
+						fundName = str.replaceAll("fS_name = \"", "").replaceAll("\";var fS", "");
+						System.out.println(fundName);
 
-		//			     break;
-					     System.out.println("处理完了"+file.getName());
-					 }
+					}
+					String regex = "Data_netWorthTrend =.*累计净值走势\\*\\/";
+					Pattern r = Pattern.compile(regex);
+					// 现在创建 matcher 对象
+					Matcher m = r.matcher(jJStockCode);
+
+					if (m.find()) {
+						String str = m.group(0);
+						//			         System.out.println(str);
+						String str1 = str.replaceAll("Data_netWorthTrend = ", "").replaceAll(";\\/\\*累计净值走势\\*\\/", "");
+						//			         System.out.println(str1);
+
+						JSONArray jsonArray = JSONObject.parseArray(str1);
+						//			        System.out.println(jsonArray.get(0));
+						List<Fund> list = new ArrayList<Fund>();
+						for (int i = 0; i < jsonArray.size(); i++) {
+							JSONObject parseObject = JSONObject.parseObject(jsonArray.get(i).toString());
+							//				         System.out.println(parseObject.get("x")+"解析成功 ");
+							Fund fund = new Fund();
+
+							SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+							Long time = new Long(parseObject.get("x").toString());
+							String d = format.format(time);
+							Date date = format.parse(d);
+							System.out.println("Format :" + d);
+							//								         fund.setFundcode(file.getName().replace(".js", ""));
+							String code = file.getName().replace(".js", "");
+							fund.setFundcode(code);
+							fund.setFundname(fundName);
+							String maxDate = "";
+							for (Map<String, String> map : allFuncMaxDate) {
+								if (map.get("fundcode").equals(code)) {
+									maxDate = map.get("timedate");
+									break;
+								}
+							}
+							if (StringUtils.isEmpty(maxDate)) {
+								System.out.println(fundName + " not fund maxdate");
+								continue;
+							}
+							Date date2 = format.parse(maxDate);
+							System.out.println(
+								"date = " + d + " , date2 = " + maxDate + " .." + (date.getTime() - date2.getTime()));
+
+							fund.setTimedate(d);
+							//{"x":1604505600000,"y":0.931,"equityReturn":1.2,"unitMoney":""}
+							fund.setCurrentday(Double.valueOf(parseObject.get("y").toString()));
+							fund.setWave(Double.valueOf(parseObject.get("equityReturn").toString()));
+							//				         System.out.println(fund.toString());
+							//				         list.add(fund);
+							if (date.getTime() - date2.getTime() > 0) {
+								System.out.println("##" + fund.toString());
+								fundMapper.insert(fund);
+							}
+							//
+						}
+					}
+
+					//			     break;
+					System.out.println("处理完了" + file.getName());
+					//				}
 				} catch (IOException | ParseException e) {
 					e.printStackTrace();
 				}
 
+			}
 
-		        System.out.println(("----- selectAll method test ------"));
-		        List<Fund> userList = fundMapper.selectList(null);
-		        //Assert.assertEquals(5, userList.size());
-		        userList.forEach(System.out::println);
+		});
+//		thread.setDaemon(true);
+		thread.start();
 
-		    	try {
-
-
-
-		//			String url ="https://stock.finance.sina.com.cn/fundInfo/api/openapi.php/CaihuiFundInfoService.getNav?callback=jQuery111208456380533606518_1615362540442&symbol=260108&datefrom=2010-03-01&dateto=2021-03-10&page=2&_=1615362540465";
-		//			String result = HttpUtil.doGet(url);
-		//			System.out.println(result);
-		//			 String regex="\\[.*\\]";
-		//			 Pattern r = Pattern.compile(regex);
-		//			 // 现在创建 matcher 对象
-		//			 Matcher m = r.matcher(result);
-		//
-		//			 if (m.find( )) {
-		//				 String str = m.group(0);
-		//				 System.out.println(str);
-		////				 JSONObject parseObject = JSONObject.parseObject( str);
-		//			 	//jQuery111208456380533606518_1615362540442({"result":{"status":{"code":0},"data":{"data":[{"fbrq":"2021-02-03 00:00:00","jjjz":"3.354","ljjz":"5.161"},{"fbrq":"2021-02-02 00:00:00","jjjz":"3.355","ljjz":"5.162"},{"fbrq":"2021-02-01 00:00:00","jjjz":"3.259","ljjz":"5.066"},{"fbrq":"2021-01-29 00:00:00","jjjz":"3.234","ljjz":"5.041"},{"fbrq":"2021-01-28 00:00:00","jjjz":"3.209","ljjz":"5.016"},{"fbrq":"2021-01-27 00:00:00","jjjz":"3.288","ljjz":"5.095"},{"fbrq":"2021-01-26 00:00:00","jjjz":"3.311","ljjz":"5.118"},{"fbrq":"2021-01-25 00:00:00","jjjz":"3.41","ljjz":"5.217"},{"fbrq":"2021-01-22 00:00:00","jjjz":"3.279","ljjz":"5.086"},{"fbrq":"2021-01-21 00:00:00","jjjz":"3.221","ljjz":"5.028"},{"fbrq":"2021-01-20 00:00:00","jjjz":"3.151","ljjz":"4.958"},{"fbrq":"2021-01-19 00:00:00","jjjz":"3.1","ljjz":"4.907"},{"fbrq":"2021-01-18 00:00:00","jjjz":"3.172","ljjz":"4.979"},{"fbrq":"2021-01-15 00:00:00","jjjz":"3.185","ljjz":"4.992"},{"fbrq":"2021-01-14 00:00:00","jjjz":"3.199","ljjz":"5.006"},{"fbrq":"2021-01-13 00:00:00","jjjz":"3.287","ljjz":"5.094"},{"fbrq":"2021-01-12 00:00:00","jjjz":"3.529","ljjz":"5.166"},{"fbrq":"2021-01-11 00:00:00","jjjz":"3.43","ljjz":"5.067"},{"fbrq":"2021-01-08 00:00:00","jjjz":"3.483","ljjz":"5.12"},{"fbrq":"2021-01-07 00:00:00","jjjz":"3.57","ljjz":"5.207"},{"fbrq":"2021-01-06 00:00:00","jjjz":"3.492","ljjz":"5.129"}],"total_num":"2692"}}})
-		////			 	System.out.println(parseObject.get("result"));
-		////			 	JSONObject dataObject = JSONObject.parseObject( parseObject.get("result").toString());
-		////			 	JSONObject subObj = JSONObject.parseObject(dataObject.get("data").toString());
-		//
-		//			 	JSONArray jsonArray = JSONObject.parseArray(str);
-		//			 	jsonArray.stream().forEach(System.out::println);
-		//			 }
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+		try {
+				System.out.println("生产线程启动");
+				String jJCode = FindFundStocks.getJJStockCode("D:\\s\\fundcode_search.js");
+				String[] split = jJCode.split("\\]\\,\\[", -1);
+				for (String s : split) {
+					//"000002","HXCZHH","华夏成长混合(后端)","混合型","HUAXIACHENGZHANGHUNHE"
+					String[] temp = s.replaceAll("null", "").replaceAll("\\[", "").split(",", -1);
+					FindFundStocks.JCode.put(temp[0],new ArrayList<>());
 				}
+				//        System.out.println(JCode);
+				System.out.println(new Date().getTime());
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddhhmmss");
+				String format = sdf.format(new Date());
+				for (Map.Entry<String, List<String>> entry : FindFundStocks.JCode.entrySet()) {
+					String url =
+						"http://fund.eastmoney.com/pingzhongdata/" + entry.getKey().replaceAll("\"", "") + ".js?v="
+							+ format;
+					FindFundStocks.downloadHttpUrl(url, "d://s//jj//", entry.getKey().replaceAll("\"", "") + ".js");
+
+//					if(entry.getKey().equals("\"260108\"")){
+						System.out.println("queue.add "+entry.getKey());
+						queue.put(entry.getKey());
+//					}
+
+				}
+				//三个小时
+			 Thread.currentThread().sleep(3*60*60*1000);
+
+			}catch (Exception e){
+				e.printStackTrace();
+			}
+
+
+
+
+//
+//
+//				        System.out.println(("----- selectAll method test ------"));
+//				        List<Fund> userList = fundMapper.selectList(null);
+//				        //Assert.assertEquals(5, userList.size());
+//				        userList.forEach(System.out::println);
 
 
 	}
 
-
+	/**
+	 * Excel
+	 */
 	@Test
-    public  void renameExcel(){
-        List<Map<String,String>> list = fundMapper.selectDistinctFundCodeNameList();
-        System.out.println(list);
-        File file = new File("d:/s/s.xlsx");
-        EasyExcel.read(file, StatisticsData.class, new StatisticListener(list,fundMapper)).sheet().doRead();
-    }
+    public  void WriteExcel(){
+//        List<Map<String,String>> list = fundMapper.selectDistinctFundCodeNameList();
+//        System.out.println(list);
+//        File file = new File("d:/s/1111.xlsx");
+//        EasyExcel.read(file, StatisticsData.class, new StatisticListener(list,fundMapper)).sheet().doRead();
+
+		Map<String,StatisticsDataNew> map = new HashMap<>();
+		List<String> codeList = fundMapper.selectDistinctFundCodeList();
+		//		List<String> codeList = new ArrayList<String>();
+		//		codeList.add("020003");
+		Map<String, List<Fund>> fundlistMap = new HashMap<String, List<Fund>>();
+		codeList.forEach(e->{
+			QueryWrapper<Fund> queryWrapper = new QueryWrapper<>();
+			queryWrapper.eq("fundcode", e);
+			List<Fund> list = fundMapper.selectList(queryWrapper);
+			Double account = -1000d;
+			//初始化
+			Double start = 1000d;
+			//步长
+			Double step = 10d;
+
+
+			System.out.println("monitor begin=====");
+			System.out.println("begin "+start);
+			boolean flag = false;
+			boolean myflag = false;
+			String fundName = "";
+			String fileName = "";
+			StringBuilder builder = new StringBuilder();
+			int reset =0;
+			double totaltake = 0;
+			int index =0;
+			for(int i =0 ;i < list.size() ; i ++) {
+				fundName =  list.get(i).getFundname();
+				if(i == 0) {
+					fileName = list.get(i).getFundcode();
+				}
+				LocalDate localDate = LocalDate.of(2010,1,1);
+				LocalDate parse = LocalDate.parse(list.get(i).getTimedate(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+				if(parse.isBefore(localDate)){
+					continue;
+				}
+				index = index+1;
+				if(list.get(i).getWave()!=0) {
+					account = account - step;
+					start = start + step;
+
+					Double temp = start * list.get(i).getWave()/100;
+
+					builder.append("temp "+temp+"\r\n");
+
+					BigDecimal precnet = new BigDecimal((temp)).divide(new BigDecimal(start),3,BigDecimal.ROUND_HALF_UP);
+					start = start+temp;
+					double totalIncomePercent = (start-Math.abs(account))/Math.abs(account);
+//					System.out.println("totalIncomePercnet  "+totalIncomePercent);
+
+					if(totalIncomePercent > 1) {
+						Double tempDouble = start / Double.valueOf(4) ;
+						builder.append("take====="+tempDouble +" \r\n");
+						start =start-tempDouble;
+						flag = true;
+						reset = i;
+						totaltake = totaltake + tempDouble;
+					}
+
+					builder.append(list.get(i).getTimedate()+" 第"+i+"天 ,当天 "+ temp+", 当天百分比"+String.format("%.2f", precnet.doubleValue()*100)+", 剩余 "+(start)+" account "+account +" totalIncomePercent ="+String.format("%.2f", totalIncomePercent*100) +"totaltake ="+totaltake+"\r\n");
+					StatisticsDataNew vo = new StatisticsDataNew();
+					vo.setTotalIncomePercent(totalIncomePercent*100);
+					vo.setReMain(start+"");
+					vo.setPerDAy(index+"");
+					vo.setJCode(fileName);
+					vo.setAccount(account+"");
+					vo.setFundname(fundName);
+					vo.setTake1(totaltake+"");
+					map.put(fileName,vo);
+					if(totalIncomePercent*100 < -20 && flag && i-reset >10) {
+						account = account - 10000;
+						start = start + 10000;
+						flag = false;
+						myflag =  true;
+					}
+				}
+			}
+
+
+		});
+
+
+
+		System.out.println("monitor end====");
+		Collection<StatisticsDataNew> values = map.values();
+		List<StatisticsDataNew> collect = values.stream().map(e -> {
+			StatisticsDataNew dataNew = new StatisticsDataNew();
+			dataNew.setAccount(e.getAccount());
+
+			dataNew.setFundname(e.getFundname());
+			dataNew.setJCode(e.getJCode());
+			dataNew.setTake1(e.getTake1());
+			dataNew.setTake2(Double.valueOf(e.getReMain())+Double.valueOf(e.getTake1())+"");
+//			dataNew.setTake3(e.getTake3());
+			dataNew.setPerDAy(e.getPerDAy());
+			dataNew.setReMain(e.getReMain());
+			dataNew.setTotalIncomePercent(e.getTotalIncomePercent());
+			return dataNew;
+		}).collect(Collectors.toList());
+
+		ExcelWriter excelWriter = EasyExcel.write("d:/s/new.xlsx", StatisticsDataNew.class).build();
+		WriteSheet writeSheet = EasyExcel.writerSheet("data").build();
+		excelWriter.write(collect, writeSheet);
+		/// 千万别忘记finish 会帮忙关闭流
+		excelWriter.finish();
+
+
+
+	}
 
 
 
@@ -304,11 +511,11 @@ public class StartApplicationTest{
 	 */
 	@Test
 	public void monitor() throws Exception{
-		String code = "000311";
+		String code = "162203";
 		String record = "";
-		Double account =-50d;
+		Double account =-10000d;
 		//初始化
-		Double start = 50d;
+		Double start = 10000d;
 		//步长
 		Double step = 10d;
 
@@ -475,7 +682,7 @@ public class StartApplicationTest{
 	 */
 	@Test
 	public void monitorNeverSalePertenYearsTakeSome() throws Exception{
-		String code = "260108";
+		String code = "162203";
 		double startMax= -30000d;
 		Double account =-10d;
 		//初始化
@@ -566,11 +773,11 @@ public class StartApplicationTest{
 	 */
 	@Test
 	public void monitor2() throws Exception{
-		String code = "000834";
+		String code = "162203";
 		double startMax= -30000d;
-		Double account =-10d;
+		Double account =-10000d;
 		//初始化
-		Double start = 10d;
+		Double start = 10000d;
 		//步长
 		Double step = 20d;
 
@@ -623,15 +830,18 @@ public class StartApplicationTest{
 				BigDecimal precnet = new BigDecimal((temp)).divide(new BigDecimal(start),3,BigDecimal.ROUND_HALF_UP);
 				start = start+temp;
 
-				double totalIncomePercent =0;
-				if((Math.abs(account)-take)<0){
-					if(finalvalue.intValue()==0){
-						finalvalue = Math.abs(account);
-					}
-					 totalIncomePercent = (start-(Math.abs(account)-take))/finalvalue;
-				}else{
-					 totalIncomePercent = (start-(Math.abs(account)-take))/(Math.abs(account)-take);
-				}
+
+				double totalIncomePercent = (start-Math.abs(account))/Math.abs(account);
+
+				//
+//				if((Math.abs(account)-take)<0){
+//					if(finalvalue.intValue()==0){
+//						finalvalue = Math.abs(account);
+//					}
+//					 totalIncomePercent = (start-(Math.abs(account)-take))/finalvalue;
+//				}else{
+//					 totalIncomePercent = (start-(Math.abs(account)-take))/(Math.abs(account)-take);
+//				}
 
 
 
@@ -643,9 +853,8 @@ public class StartApplicationTest{
 
 				}
 
-				System.out.println(list.get(i).getTimedate()+" 第"+i+"天 ,当天 "+ temp+", 当天百分比"+String.format("%.2f", precnet.doubleValue()*100)
-					+", 剩余 "+(start)+" account1 "+(account+take) +" account "+account +" totalIncomePercent ="+String.format("%.2f", totalIncomePercent*100));
-				System.out.println(totalIncomePercent+","+(totalIncomePercent>10));
+				System.out.println(list.get(i).getTimedate()+" 第"+i+"天 ,当天 "+ temp+", 当天百分比"+String.format("%.2f", precnet.doubleValue()*100)+", 剩余 "+(start)+" account "+account +" totalIncomePercent ="+String.format("%.2f", totalIncomePercent*100));
+
 
 				//        		if(totalIncomePercent * 100 > 10) {
 				//        			System.out.println("一共投入"+Math.abs(account)+" 收益"+((Math.abs(start)-Math.abs(account))));
@@ -1027,12 +1236,12 @@ public class StartApplicationTest{
 	@Test
 	public void monitorAllFingleThread() throws Exception{
 
-		ArrayBlockingQueue<Map<String, Future<String>>> queue = new ArrayBlockingQueue<Map<String, Future<String>>>(20000);
+//		ArrayBlockingQueue<Map<String, Future<String>>> queue = new ArrayBlockingQueue<Map<String, Future<String>>>(20000);
 
-		//    	List<String> codeList = fundMapper.selectDistinctFundCodeList();
-		List<String> codeList = new ArrayList<String>();
+		    	List<String> codeList = fundMapper.selectDistinctFundCodeList();
+//		List<String> codeList = new ArrayList<String>();
 
-		codeList.add("020003");
+//		codeList.add("020003");
 
 		Map<String, List<Fund>> fundlistMap = new HashMap<String, List<Fund>>();
 		codeList.forEach(e->{
@@ -1045,7 +1254,7 @@ public class StartApplicationTest{
 			//初始化
 			Double start = 1000d;
 			//步长
-			Double step = 50d;
+			Double step = 10d;
 
 			//        	QueryWrapper<Fund> queryWrapper = new QueryWrapper<>();
 			//        	queryWrapper.eq("fundcode", code);
@@ -1058,7 +1267,7 @@ public class StartApplicationTest{
 			String fileName = "";
 			StringBuilder builder = new StringBuilder();
 			int reset =0;
-
+			double totaltake = 0;
 			for(int i =0 ;i < list.size() ; i ++) {
 				if(i == 0) {
 					fileName = list.get(i).getFundcode();
@@ -1077,17 +1286,19 @@ public class StartApplicationTest{
 					BigDecimal precnet = new BigDecimal((temp)).divide(new BigDecimal(start),3,BigDecimal.ROUND_HALF_UP);
 					start = start+temp;
 					double totalIncomePercent = (start-Math.abs(account))/Math.abs(account);
+					System.out.println("totalIncomePercnet  "+totalIncomePercent);
 
-
-					if(i%1200 == 0) {
+					if(totalIncomePercent > 1) {
 						Double tempDouble = start / Double.valueOf(4) ;
 						builder.append("take====="+tempDouble +" \r\n");
 						start =start-tempDouble;
 						flag = true;
 						reset = i;
+						totaltake = totaltake + tempDouble;
 					}
 
-					builder.append(list.get(i).getTimedate()+" 第"+i+"天 ,当天 "+ temp+", 当天百分比"+String.format("%.2f", precnet.doubleValue()*100)+", 剩余 "+(start)+" account "+account +" totalIncomePercent ="+String.format("%.2f", totalIncomePercent*100) +"\r\n");
+					builder.append(list.get(i).getTimedate()+" 第"+i+"天 ,当天 "+ temp+", 当天百分比"+String.format("%.2f", precnet.doubleValue()*100)+", 剩余 "+(start)+" account "+account +" totalIncomePercent ="+String.format("%.2f", totalIncomePercent*100) +"totaltake ="+totaltake+"\r\n");
+
 					//            		System.out.println(totalIncomePercent+","+(totalIncomePercent>10));
 
 
@@ -1098,11 +1309,11 @@ public class StartApplicationTest{
 						myflag =  true;
 					}
 
-					if(totalIncomePercent*100>20 && myflag) {
-						start =start-14000;
-						builder.append("take===== "+14000+" \r\n");
-						myflag = false;
-					}
+//					if(totalIncomePercent*100>20 && myflag) {
+//						start =start-14000;
+//						builder.append("take===== "+14000+" \r\n");
+//						myflag = false;
+//					}
 
 
 
@@ -1110,17 +1321,17 @@ public class StartApplicationTest{
 				//			return builder.toString();
 			}
 			//			return builder.toString();
-			System.out.println(builder.toString());
-			//        	try {
-			//				BufferedWriter out = new BufferedWriter(new FileWriter("d:/log/"+e+".txt"));
-			//				out.write(builder.toString());
-			//
-			//			    out.close();
-			//				    System.out.println(e + "文件创建成功！");
-			//			} catch (IOException e1) {
-			//				// TODO Auto-generated catch block
-			//				e1.printStackTrace();
-			//			}
+//			System.out.println(builder.toString());
+			        	try {
+							BufferedWriter out = new BufferedWriter(new FileWriter("d:/log/"+e+".txt"));
+							out.write(builder.toString());
+
+						    out.close();
+							    System.out.println(e + "文件创建成功！");
+						} catch (IOException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
 
 		});
 
@@ -1137,6 +1348,29 @@ public class StartApplicationTest{
 
 
 	public static void main(String[] args)throws Exception {
+
+		ArrayBlockingQueue queue = new ArrayBlockingQueue(10);
+
+		new Thread(()->{
+			while(true){
+				System.out.println(queue.poll());
+				try {
+					Thread.currentThread().sleep(2000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}).start();
+
+		for(int i =0 ;i < 100 ;i++){
+			queue.put(1);
+			Thread.currentThread().sleep(1000);
+		}
+
+
+
+
+
 		//    	double d = 10.78d;
 		//    	System.out.println(d>10);
 		////		BigDecimal a = new BigDecimal(-7);
@@ -1213,7 +1447,7 @@ public class StartApplicationTest{
 
 			sd.setAccount(laststr[8]);
 			sd.setReMain(laststr[6]);
-			sd.setTotalIncomePercent(laststr[10]);
+			sd.setTotalIncomePercent(Double.valueOf(laststr[10]));
 			//    	       result.append(readLastLine(file,"utf8") +"\r\n");
 			targetDatas.add(sd);
 		}
