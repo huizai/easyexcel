@@ -243,6 +243,112 @@ public class StartApplicationTest{
 
 	}
 
+	@Test
+	public void monitorAllFingleThread() throws Exception{
+
+		//		ArrayBlockingQueue<Map<String, Future<String>>> queue = new ArrayBlockingQueue<Map<String, Future<String>>>(20000);
+
+		List<String> codeList = fundMapper.selectDistinctFundCodeList();
+		//		List<String> codeList = new ArrayList<String>();
+
+		//		codeList.add("020003");
+
+		Map<String, List<Fund>> fundlistMap = new HashMap<String, List<Fund>>();
+		codeList.forEach(e->{
+			QueryWrapper<Fund> queryWrapper = new QueryWrapper<>();
+			queryWrapper.eq("fundcode", e);
+			List<Fund> list = fundMapper.selectList(queryWrapper);
+
+			//			String code = code;
+			Double account = -100d;
+			//初始化
+			Double start = 100d;
+			//步长
+			Double step = 10d;
+
+			//        	QueryWrapper<Fund> queryWrapper = new QueryWrapper<>();
+			//        	queryWrapper.eq("fundcode", code);
+			//        	List<Fund> list = fundMapper.selectList(queryWrapper);
+			System.out.println("monitor begin=====");
+			System.out.println("begin "+start);
+			boolean flag = false;
+			boolean myflag = false;
+
+			String fileName = "";
+			StringBuilder builder = new StringBuilder();
+			int reset =0;
+			double totaltake = 0;
+			for(int i =0 ;i < list.size() ; i ++) {
+				if(Integer.parseInt(list.get(i).getTimedate().substring(0,4)) < 2017){
+					continue;
+				}
+				if(i == 0) {
+					fileName = list.get(i).getFundcode();
+				}
+				//        		System.out.println(list.get(i).getWave());
+				if(list.get(i).getWave()!=0) {
+					//        			if( dayForWeek(list.get(i).getTimedate()) == "4") {
+					account = account - step;
+					start = start + step;
+					//        			}
+
+					Double temp = start * list.get(i).getWave()/100;
+
+					builder.append("temp "+temp+"\r\n");
+
+					BigDecimal precnet = new BigDecimal((temp)).divide(new BigDecimal(start),3,BigDecimal.ROUND_HALF_UP);
+					start = start+temp;
+					double totalIncomePercent = (start-Math.abs(account))/Math.abs(account);
+					System.out.println("totalIncomePercnet  "+totalIncomePercent);
+
+					if(totalIncomePercent > 1) {
+						Double tempDouble = start / Double.valueOf(4) ;
+						builder.append("take====="+tempDouble +" \r\n");
+						start =start-tempDouble;
+						flag = true;
+						reset = i;
+						totaltake = totaltake + tempDouble;
+					}
+
+					builder.append(list.get(i).getTimedate()+" 第"+i+"天 ,当天 "+ temp+", 当天百分比"+String.format("%.2f", precnet.doubleValue()*100)+", 剩余 "+(start)+" account "+account +" totalIncomePercent ="+String.format("%.2f", totalIncomePercent*100) +" totaltake="+totaltake+"\r\n");
+
+					//            		System.out.println(totalIncomePercent+","+(totalIncomePercent>10));
+
+
+					if(totalIncomePercent*100 < -20 && flag && i-reset >10) {
+						account = account - 10000;
+						start = start + 10000;
+						flag = false;
+						myflag =  true;
+					}
+
+					//					if(totalIncomePercent*100>20 && myflag) {
+					//						start =start-14000;
+					//						builder.append("take===== "+14000+" \r\n");
+					//						myflag = false;
+					//					}
+
+
+
+				}
+				//			return builder.toString();
+			}
+			//			return builder.toString();
+			//			System.out.println(builder.toString());
+			try {
+				BufferedWriter out = new BufferedWriter(new FileWriter("d:/log/"+e+".txt"));
+				out.write(builder.toString());
+
+				out.close();
+				System.out.println(e + "文件创建成功！");
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+
+		});
+		System.out.println("monitor end====");
+	}
 	/**
 	 * Excel
 	 */
@@ -513,9 +619,9 @@ public class StartApplicationTest{
 	public void monitor() throws Exception{
 		String code = "162203";
 		String record = "";
-		Double account =-10000d;
+		Double account =-100d;
 		//初始化
-		Double start = 10000d;
+		Double start = 100d;
 		//步长
 		Double step = 10d;
 
@@ -775,11 +881,11 @@ public class StartApplicationTest{
 	public void monitor2() throws Exception{
 		String code = "162203";
 		double startMax= -30000d;
-		Double account =-10000d;
+		Double account =-100d;
 		//初始化
-		Double start = 10000d;
+		Double start = 100d;
 		//步长
-		Double step = 20d;
+		Double step = 10d;
 
 		QueryWrapper<Fund> queryWrapper = new QueryWrapper<>();
 		queryWrapper.eq("fundcode", code);
@@ -845,7 +951,7 @@ public class StartApplicationTest{
 
 
 
-				if(index%1200==0) {
+				if(index%100==0) {
 					Double tempDouble = start /Double.valueOf(4) ;
 					System.out.println("take====="+tempDouble);
 					start =start-tempDouble;
@@ -1233,139 +1339,30 @@ public class StartApplicationTest{
 	}
 
 
-	@Test
-	public void monitorAllFingleThread() throws Exception{
 
-//		ArrayBlockingQueue<Map<String, Future<String>>> queue = new ArrayBlockingQueue<Map<String, Future<String>>>(20000);
-
-		    	List<String> codeList = fundMapper.selectDistinctFundCodeList();
-//		List<String> codeList = new ArrayList<String>();
-
-//		codeList.add("020003");
-
-		Map<String, List<Fund>> fundlistMap = new HashMap<String, List<Fund>>();
-		codeList.forEach(e->{
-			QueryWrapper<Fund> queryWrapper = new QueryWrapper<>();
-			queryWrapper.eq("fundcode", e);
-			List<Fund> list = fundMapper.selectList(queryWrapper);
-
-			//			String code = code;
-			Double account = -1000d;
-			//初始化
-			Double start = 1000d;
-			//步长
-			Double step = 10d;
-
-			//        	QueryWrapper<Fund> queryWrapper = new QueryWrapper<>();
-			//        	queryWrapper.eq("fundcode", code);
-			//        	List<Fund> list = fundMapper.selectList(queryWrapper);
-			System.out.println("monitor begin=====");
-			System.out.println("begin "+start);
-			boolean flag = false;
-			boolean myflag = false;
-
-			String fileName = "";
-			StringBuilder builder = new StringBuilder();
-			int reset =0;
-			double totaltake = 0;
-			for(int i =0 ;i < list.size() ; i ++) {
-				if(i == 0) {
-					fileName = list.get(i).getFundcode();
-				}
-				//        		System.out.println(list.get(i).getWave());
-				if(list.get(i).getWave()!=0) {
-					//        			if( dayForWeek(list.get(i).getTimedate()) == "4") {
-					account = account - step;
-					start = start + step;
-					//        			}
-
-					Double temp = start * list.get(i).getWave()/100;
-
-					builder.append("temp "+temp+"\r\n");
-
-					BigDecimal precnet = new BigDecimal((temp)).divide(new BigDecimal(start),3,BigDecimal.ROUND_HALF_UP);
-					start = start+temp;
-					double totalIncomePercent = (start-Math.abs(account))/Math.abs(account);
-					System.out.println("totalIncomePercnet  "+totalIncomePercent);
-
-					if(totalIncomePercent > 1) {
-						Double tempDouble = start / Double.valueOf(4) ;
-						builder.append("take====="+tempDouble +" \r\n");
-						start =start-tempDouble;
-						flag = true;
-						reset = i;
-						totaltake = totaltake + tempDouble;
-					}
-
-					builder.append(list.get(i).getTimedate()+" 第"+i+"天 ,当天 "+ temp+", 当天百分比"+String.format("%.2f", precnet.doubleValue()*100)+", 剩余 "+(start)+" account "+account +" totalIncomePercent ="+String.format("%.2f", totalIncomePercent*100) +"totaltake ="+totaltake+"\r\n");
-
-					//            		System.out.println(totalIncomePercent+","+(totalIncomePercent>10));
-
-
-					if(totalIncomePercent*100 < -20 && flag && i-reset >10) {
-						account = account - 10000;
-						start = start + 10000;
-						flag = false;
-						myflag =  true;
-					}
-
-//					if(totalIncomePercent*100>20 && myflag) {
-//						start =start-14000;
-//						builder.append("take===== "+14000+" \r\n");
-//						myflag = false;
-//					}
-
-
-
-				}
-				//			return builder.toString();
-			}
-			//			return builder.toString();
-//			System.out.println(builder.toString());
-			        	try {
-							BufferedWriter out = new BufferedWriter(new FileWriter("d:/log/"+e+".txt"));
-							out.write(builder.toString());
-
-						    out.close();
-							    System.out.println(e + "文件创建成功！");
-						} catch (IOException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						}
-
-		});
-
-
-
-		System.out.println("monitor end====");
-
-
-
-
-	}
 
 
 
 
 	public static void main(String[] args)throws Exception {
 
-		ArrayBlockingQueue queue = new ArrayBlockingQueue(10);
-
-		new Thread(()->{
-			while(true){
-				System.out.println(queue.poll());
-				try {
-					Thread.currentThread().sleep(2000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-		}).start();
-
-		for(int i =0 ;i < 100 ;i++){
-			queue.put(1);
-			Thread.currentThread().sleep(1000);
-		}
+//		ArrayBlockingQueue queue = new ArrayBlockingQueue(10);
+//
+//		new Thread(()->{
+//			while(true){
+//				System.out.println(queue.poll());
+//				try {
+//					Thread.currentThread().sleep(2000);
+//				} catch (InterruptedException e) {
+//					e.printStackTrace();
+//				}
+//			}
+//		}).start();
+//
+//		for(int i =0 ;i < 100 ;i++){
+//			queue.put(1);
+//			Thread.currentThread().sleep(1000);
+//		}
 
 
 
@@ -1415,7 +1412,7 @@ public class StartApplicationTest{
 						System.out.println(s);
 						sBuilder.append(s+"\r\n");
 					}
-					//    	                result.append( System.lineSeparator() + s);
+					    	                result.append( System.lineSeparator() + s);
 				}
 				br.close();
 
@@ -1450,6 +1447,7 @@ public class StartApplicationTest{
 			sd.setTotalIncomePercent(Double.valueOf(laststr[10]));
 			//    	       result.append(readLastLine(file,"utf8") +"\r\n");
 			targetDatas.add(sd);
+			break;
 		}
 		String fileName =  "D:\\\\s\\\\s.xlsx";
 		ExcelWriter excelWriter = EasyExcel.write(fileName, StatisticsData.class).build();
