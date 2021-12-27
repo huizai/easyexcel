@@ -9,6 +9,7 @@ import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -271,6 +272,7 @@ public class StartApplicationTest{
 			//        	List<Fund> list = fundMapper.selectList(queryWrapper);
 			System.out.println("monitor begin=====");
 			System.out.println("begin "+start);
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 			boolean flag = false;
 			boolean myflag = false;
 
@@ -278,10 +280,20 @@ public class StartApplicationTest{
 			StringBuilder builder = new StringBuilder();
 			int reset =0;
 			double totaltake = 0;
+			AtomicInteger atomic = new AtomicInteger(1);
 			for(int i =0 ;i < list.size() ; i ++) {
-				if(Integer.parseInt(list.get(i).getTimedate().substring(0,4)) < 2017){
-					continue;
+				try {
+					Date parse = sdf.parse(list.get(i).getTimedate());
+					Date newDate = sdf.parse("2021-10-10");
+					if(parse.before(newDate)){
+						continue;
+					}
+				} catch (ParseException parseException) {
+					parseException.printStackTrace();
 				}
+				//				if(Integer.parseInt(list.get(i).getTimedate().substring(0,4)) < 2021){
+//					continue;
+//				}
 				if(i == 0) {
 					fileName = list.get(i).getFundcode();
 				}
@@ -310,7 +322,10 @@ public class StartApplicationTest{
 						totaltake = totaltake + tempDouble;
 					}
 
-					builder.append(list.get(i).getTimedate()+" 第"+i+"天 ,当天 "+ temp+", 当天百分比"+String.format("%.2f", precnet.doubleValue()*100)+", 剩余 "+(start)+" account "+account +" totalIncomePercent ="+String.format("%.2f", totalIncomePercent*100) +" totaltake="+totaltake+"\r\n");
+					builder.append(list.get(i).getTimedate()+" 第"+atomic.getAndIncrement()+"天 ,当天 "+ temp+
+						", 当天百分比"+String.format("%.2f", precnet.doubleValue()*100)+", 剩余 "+(start)+
+						" account "+account +" totalIncomePercent ="+String.format("%.2f", totalIncomePercent*100) +
+						" totaltake="+totaltake+"\r\n");
 
 					//            		System.out.println(totalIncomePercent+","+(totalIncomePercent>10));
 
