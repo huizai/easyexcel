@@ -488,6 +488,9 @@ public class StartApplicationTest{
 				String url = "http://fund.eastmoney.com/"+fundCode+".html";
 
 			    FindFundStocks.downloadHttpUrl(url, "d://s//top100//", fundCode+".html");
+			    if(i >100){
+			    	break;
+				}
 
 
 		}
