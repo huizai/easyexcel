@@ -284,7 +284,7 @@ public class StartApplicationTest{
 			for(int i =0 ;i < list.size() ; i ++) {
 				try {
 					Date parse = sdf.parse(list.get(i).getTimedate());
-					Date newDate = sdf.parse("2021-10-10");
+					Date newDate = sdf.parse("2021-11-10");
 					if(parse.before(newDate)){
 						continue;
 					}
@@ -383,9 +383,9 @@ public class StartApplicationTest{
 			QueryWrapper<Fund> queryWrapper = new QueryWrapper<>();
 			queryWrapper.eq("fundcode", e);
 			List<Fund> list = fundMapper.selectList(queryWrapper);
-			Double account = -1000d;
+			Double account = -100d;
 			//初始化
-			Double start = 1000d;
+			Double start = 100d;
 			//步长
 			Double step = 10d;
 
@@ -405,7 +405,7 @@ public class StartApplicationTest{
 				if(i == 0) {
 					fileName = list.get(i).getFundcode();
 				}
-				LocalDate localDate = LocalDate.of(2010,1,1);
+				LocalDate localDate = LocalDate.of(2021,11,1);
 				LocalDate parse = LocalDate.parse(list.get(i).getTimedate(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 				if(parse.isBefore(localDate)){
 					continue;
@@ -474,11 +474,23 @@ public class StartApplicationTest{
 			return dataNew;
 		}).collect(Collectors.toList());
 
+		List<StatisticsDataNew> sorted = collect.stream().sorted(Comparator.comparing(StatisticsDataNew::getTotalIncomePercent).reversed()).collect(Collectors.toList());
+
+
 		ExcelWriter excelWriter = EasyExcel.write("d:/s/new.xlsx", StatisticsDataNew.class).build();
 		WriteSheet writeSheet = EasyExcel.writerSheet("data").build();
 		excelWriter.write(collect, writeSheet);
 		/// 千万别忘记finish 会帮忙关闭流
 		excelWriter.finish();
+
+		for (int i = 0; i < sorted.size(); i++) {
+				String fundCode = sorted.get(i).getJCode();
+				String url = "http://fund.eastmoney.com/"+fundCode+".html";
+
+			    FindFundStocks.downloadHttpUrl(url, "d://s//top100//", fundCode+".html");
+
+
+		}
 
 
 
